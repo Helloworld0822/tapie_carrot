@@ -242,5 +242,145 @@
     height: 120px;
   }
 }
-.photo-field-title{font-size:14px;font-weight:600;margin:0 0 16px}.photo-field-title>span{font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}.photo-selection{display:flex;gap:16px;align-items:start}.sell-form .photo-picker{width:132px;height:132px;margin:0;border:1px dashed #b9bec5;border-radius:12px;background:#fafbfc;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;position:relative;cursor:pointer}.photo-picker svg{color:var(--muted);width:28px;height:28px}.photo-picker strong{font-size:13px}.photo-picker>span{font-size:12px;color:var(--muted)}.sell-form .photo-picker input[type=file]{position:absolute;inset:0;opacity:0;margin:0;width:100%;height:100%;cursor:pointer}.photo-picker:focus-within{outline:2px solid var(--text);outline-offset:3px}.photo-thumbnail{position:relative;width:132px;height:132px}.photo-thumbnail img{width:100%;height:100%;object-fit:cover;border-radius:12px}.photo-thumbnail>button{position:absolute;right:6px;top:6px;width:25px;height:25px;border:0;border-radius:50%;background:#212124b3;color:white;font-size:20px;line-height:1}.photo-thumbnail>span{position:absolute;bottom:8px;left:8px;padding:4px 7px;border-radius:5px;background:white;font-size:10px;font-weight:700}.photo-caption{font-size:13px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere;margin:16px 0 8px}@media(max-width:800px){.sell-page{padding-bottom:140px}.sell-actions{position:fixed;bottom:0;left:0;right:0;padding:14px 20px calc(14px + env(safe-area-inset-bottom));z-index:20}.sell-page .sell-form{padding-bottom:20px}body:has(.sell-page) .chat-launcher{bottom:118px}body:has(.sell-page) .floating-chat{bottom:180px;max-height:calc(100dvh - 205px)}}
-.sell-auth{background:#fff4eb;padding:18px;border-radius:12px;font-size:14px;line-height:1.8;margin-bottom:28px}.sell-auth a{font-weight:700;text-decoration:underline;margin-left:8px}.sell-auth button{background:none;border:0;text-decoration:underline;font-weight:700}.sell-form fieldset:disabled{opacity:.65}
+.photo-field-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+.photo-field-title > span {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 6px;
+}
+.photo-selection {
+  display: flex;
+  gap: 16px;
+  align-items: start;
+}
+.sell-form .photo-picker {
+  width: 132px;
+  height: 132px;
+  margin: 0;
+  border: 1px dashed #b9bec5;
+  border-radius: 12px;
+  background: #fafbfc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  cursor: pointer;
+}
+.photo-picker svg {
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+}
+.photo-picker strong {
+  font-size: 13px;
+}
+.photo-picker > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.sell-form .photo-picker input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.photo-picker:focus-within {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+.photo-thumbnail {
+  position: relative;
+  width: 132px;
+  height: 132px;
+}
+.photo-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.photo-thumbnail > button {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 25px;
+  height: 25px;
+  border: 0;
+  border-radius: 50%;
+  background: #212124b3;
+  color: white;
+  font-size: 20px;
+  line-height: 1;
+}
+.photo-thumbnail > span {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+.photo-caption {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  margin: 16px 0 8px;
+}
+@media (max-width: 800px) {
+  .sell-page {
+    padding-bottom: 140px;
+  }
+  .sell-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    z-index: 20;
+  }
+  .sell-page .sell-form {
+    padding-bottom: 20px;
+  }
+  body:has(.sell-page) .chat-launcher {
+    bottom: 118px;
+  }
+  body:has(.sell-page) .floating-chat {
+    bottom: 180px;
+    max-height: calc(100dvh - 205px);
+  }
+}
+.sell-auth {
+  background: #fff4eb;
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 28px;
+}
+.sell-auth a {
+  font-weight: 700;
+  text-decoration: underline;
+  margin-left: 8px;
+}
+.sell-auth button {
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  font-weight: 700;
+}
+.sell-form fieldset:disabled {
+  opacity: 0.65;
+}
