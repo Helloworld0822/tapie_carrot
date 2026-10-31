@@ -1,28 +1,122 @@
-import assert from 'node:assert/strict';
-const base=process.env.TEST_BASE_URL||'http://localhost:3101';
-async function call(path,body,cookie){const r=await fetch(base+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json',...(cookie?{cookie}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};}
-const suffix=crypto.randomUUID();
-const seller=await call('/api/auth/register',{name:'판매자',email:`s${suffix}@test.com`,password:'password123'});assert.equal(seller.status,201);
-const buyer=await call('/api/auth/register',{name:'구매자',email:`b${suffix}@test.com`,password:'password123'});assert.equal(buyer.status,201);
-const stranger=await call('/api/auth/register',{name:'다른이웃',email:`x${suffix}@test.com`,password:'password123'});
-assert.equal((await call('/api/auth/login',{email:`s${suffix}@test.com`,password:'wrongpassword'})).status,401);
-assert.equal((await call('/api/auth/login',{email:`s${suffix}@test.com`,password:'password123'})).status,200);
-assert.equal((await call('/api/items',{title:'책',price:100,location:'서초동'})).status,401);
-assert.equal((await call('/api/items',{title:'책',price:null,location:'서초동'},seller.cookie)).status,400);
-const item=await call('/api/items',{title:`테스트${suffix}`,price:'1000',location:'서초동',description:'깨끗한 책'},seller.cookie);assert.equal(item.status,201);
-assert.equal((await call(`/api/items/${item.data.id}`)).data.title,item.data.title);
-assert.equal((await call('/api/items?q='+encodeURIComponent(suffix))).data.length,1);
-assert.equal((await call('/api/chats',{itemId:item.data.id},seller.cookie)).status,400);
-const chat=await call('/api/chats',{itemId:item.data.id},buyer.cookie);assert.equal(chat.status,201);
-assert.equal((await call('/api/chats',{itemId:item.data.id},buyer.cookie)).data.id,chat.data.id);
-const path=`/api/chats/${chat.data.id}/messages`;
-assert.equal((await call(path,undefined,stranger.cookie)).status,404);
-assert.equal((await call(path,{text:'침입'},stranger.cookie)).status,404);
-assert.equal((await call(path,{text:'구매할 수 있나요?'},buyer.cookie)).status,201);
-assert.equal((await call(path,undefined,seller.cookie)).data[0].text,'구매할 수 있나요?');
-assert.equal((await call(path,{text:'네 가능합니다'},seller.cookie)).status,201);
-assert.equal((await call(path,undefined,buyer.cookie)).data.length,2);
-assert.equal((await call('/api/chats',undefined,seller.cookie)).data.length,1);
-assert.equal((await call('/api/auth/logout',{},buyer.cookie)).status,200);
-assert.equal((await call('/api/chats',undefined,buyer.cookie)).status,401);
-console.log('PASS: 회원가입, 로그인, 상품 등록/조회/검색, 채팅 송수신, 접근 권한, 로그아웃');
+import assert from "node:assert/strict";
+const base = process.env.TEST_BASE_URL || "http://localhost:3101";
+async function call(path, body, cookie) {
+  const r = await fetch(base + path, {
+    method: body === undefined ? "GET" : "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(cookie ? { cookie } : {}),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  return {
+    status: r.status,
+    data: await r.json(),
+    cookie: r.headers.get("set-cookie")?.split(";")[0],
+  };
+}
+const suffix = crypto.randomUUID();
+const seller = await call("/api/auth/register", {
+  name: "판매자",
+  email: `s${suffix}@test.com`,
+  password: "password123",
+});
+assert.equal(seller.status, 201);
+const buyer = await call("/api/auth/register", {
+  name: "구매자",
+  email: `b${suffix}@test.com`,
+  password: "password123",
+});
+assert.equal(buyer.status, 201);
+const stranger = await call("/api/auth/register", {
+  name: "다른이웃",
+  email: `x${suffix}@test.com`,
+  password: "password123",
+});
+assert.equal(
+  (
+    await call("/api/auth/login", {
+      email: `s${suffix}@test.com`,
+      password: "wrongpassword",
+    })
+  ).status,
+  401,
+);
+assert.equal(
+  (
+    await call("/api/auth/login", {
+      email: `s${suffix}@test.com`,
+      password: "password123",
+    })
+  ).status,
+  200,
+);
+assert.equal(
+  (await call("/api/items", { title: "책", price: 100, location: "서초동" }))
+    .status,
+  401,
+);
+assert.equal(
+  (
+    await call(
+      "/api/items",
+      { title: "책", price: null, location: "서초동" },
+      seller.cookie,
+    )
+  ).status,
+  400,
+);
+const item = await call(
+  "/api/items",
+  {
+    title: `테스트${suffix}`,
+    price: "1000",
+    location: "서초동",
+    description: "깨끗한 책",
+  },
+  seller.cookie,
+);
+assert.equal(item.status, 201);
+assert.equal(
+  (await call(`/api/items/${item.data.id}`)).data.title,
+  item.data.title,
+);
+assert.equal(
+  (await call("/api/items?q=" + encodeURIComponent(suffix))).data.length,
+  1,
+);
+assert.equal(
+  (await call("/api/chats", { itemId: item.data.id }, seller.cookie)).status,
+  400,
+);
+const chat = await call("/api/chats", { itemId: item.data.id }, buyer.cookie);
+assert.equal(chat.status, 201);
+assert.equal(
+  (await call("/api/chats", { itemId: item.data.id }, buyer.cookie)).data.id,
+  chat.data.id,
+);
+const path = `/api/chats/${chat.data.id}/messages`;
+assert.equal((await call(path, undefined, stranger.cookie)).status, 404);
+assert.equal((await call(path, { text: "침입" }, stranger.cookie)).status, 404);
+assert.equal(
+  (await call(path, { text: "구매할 수 있나요?" }, buyer.cookie)).status,
+  201,
+);
+assert.equal(
+  (await call(path, undefined, seller.cookie)).data[0].text,
+  "구매할 수 있나요?",
+);
+assert.equal(
+  (await call(path, { text: "네 가능합니다" }, seller.cookie)).status,
+  201,
+);
+assert.equal((await call(path, undefined, buyer.cookie)).data.length, 2);
+assert.equal(
+  (await call("/api/chats", undefined, seller.cookie)).data.length,
+  1,
+);
+assert.equal((await call("/api/auth/logout", {}, buyer.cookie)).status, 200);
+assert.equal((await call("/api/chats", undefined, buyer.cookie)).status, 401);
+console.log(
+  "PASS: 회원가입, 로그인, 상품 등록/조회/검색, 채팅 송수신, 접근 권한, 로그아웃",
+);

@@ -6,7 +6,9 @@
     "dev": "node server.mjs --dev",
     "build": "next build",
     "start": "node server.mjs",
-    "lint": "eslint"
+    "lint": "eslint app lib scripts tests server.mjs",
+    "test": "node scripts/test.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "16.4.3",
@@ -26,5 +28,6 @@
     "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "type": "module"
 }
