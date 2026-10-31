@@ -1,9 +1,11 @@
 "use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import type { User } from "./components/auth/auth-form";
-import Icon from "./components/ui-icon";
-const ChatPanel = dynamic(() => import("./components/chat/chat-panel"), {
+import type { User } from "@/lib/types";
+import Icon from "../ui-icon";
+const ChatPanel = dynamic(() => import("../chat/chat-panel"), {
   ssr: false,
   loading: () => (
     <div className="floating-chat" role="status">
@@ -12,12 +14,11 @@ const ChatPanel = dynamic(() => import("./components/chat/chat-panel"), {
   ),
 });
 export default function Account({
-  standalone = false,
   initialOpen = false,
 }: {
-  standalone?: boolean;
   initialOpen?: boolean;
 }) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null),
     [chatId, setChatId] = useState<number | null>(null),
     [opened, setOpened] = useState(initialOpen),
@@ -45,8 +46,16 @@ export default function Account({
       window.removeEventListener("open-chat", open);
     };
   }, []);
-  useEffect(()=>{const close=(event:KeyboardEvent)=>{if(event.key==='Escape'){setOpened(false);setProfile(false);}};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[]);
-  if (standalone) return <ChatPanel standalone />;
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpened(false);
+        setProfile(false);
+      }
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, []);
   return (
     <>
       <div className="profile-control">
@@ -88,16 +97,16 @@ export default function Account({
             )}
           </>
         ) : (
-          <a className="outline" href="/login">
+          <Link className="outline" href="/login">
             로그인
-          </a>
+          </Link>
         )}
       </div>
       {opened && (
         <ChatPanel
           key={chatId ?? "list"}
           initialChat={chatId}
-          floating
+          user={user}
           onClose={() => setOpened(false)}
         />
       )}
@@ -107,7 +116,7 @@ export default function Account({
         aria-expanded={opened}
         onClick={() => {
           if (!user) {
-            location.assign("/login");
+            router.push("/login");
             return;
           }
           setOpened(!opened);

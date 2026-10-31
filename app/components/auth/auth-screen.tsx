@@ -1,17 +1,18 @@
 "use client";
-import Header from "../../header";
+import Link from "next/link";
+import Header from "@/app/components/layout/brand-logo";
 import { AuthForm } from "./auth-form";
 import "./auth.css";
 export function AuthScreen({ register = false }: { register?: boolean }) {
   return (
     <div className="auth-page">
       <header className="auth-header">
-        <a href="/" aria-label="당근 홈">
+        <Link href="/" aria-label="당근 홈">
           <Header />
-        </a>
-        <a className="auth-home" href="/">
+        </Link>
+        <Link className="auth-home" href="/">
           중고거래 둘러보기 <span aria-hidden="true">↗</span>
-        </a>
+        </Link>
       </header>
       <main className="auth-main">
         <section className="auth-intro">
@@ -78,7 +79,7 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
         </section>
       </main>
       <footer className="auth-footer">
-        <a href="/">당근 홈</a>
+        <Link href="/">당근 홈</Link>
         <span>가까운 이웃과 함께하는 중고거래</span>
       </footer>
     </div>

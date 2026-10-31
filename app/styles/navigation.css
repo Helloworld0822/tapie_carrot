@@ -1,0 +1,134 @@
+.top {
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid #f3f3f3;
+}
+.nav {
+  max-width: 1200px;
+  margin: auto;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 0 24px;
+}
+.nav svg {
+  width: 72px;
+  height: 42px;
+  display: block;
+}
+.nav nav {
+  display: flex;
+  gap: 28px;
+  font-weight: 700;
+  font-size: 18px;
+  white-space: nowrap;
+}
+.nav nav .active {
+  color: #ff6f0f;
+}
+.search {
+  margin-left: auto;
+  display: flex;
+  background: #f2f3f6;
+  border-radius: 8px;
+  padding: 0 12px;
+}
+.search input {
+  border: 0;
+  background: none;
+  width: 210px;
+  padding: 12px 0;
+  outline: none;
+}
+.search button {
+  border: 0;
+  background: none;
+  font-size: 26px;
+}
+@media (max-width: 800px) {
+  .nav {
+    gap: 14px;
+    height: 62px;
+  }
+  .nav nav {
+    gap: 15px;
+    font-size: 15px;
+    overflow: auto;
+  }
+  .nav nav a:nth-child(n + 3) {
+    display: none;
+  }
+  .search {
+    display: none;
+  }
+}
+.search {
+  background: var(--surface);
+  border-radius: var(--control-radius);
+}
+@media (max-width: 800px) {
+  .nav {
+    height: auto;
+    min-height: 62px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    gap: 12px;
+  }
+  .search {
+    display: flex;
+    order: 4;
+    width: 100%;
+    margin: 0;
+  }
+  .search input {
+    width: 100%;
+    min-width: 0;
+  }
+  .search button {
+    flex-shrink: 0;
+  }
+}
+@media (max-width: 800px) {
+  .nav > .outline {
+    margin-left: 0;
+  }
+  .nav nav {
+    flex: 1;
+  }
+}
+@media (max-width: 800px) {
+  .nav nav a:nth-child(n + 2) {
+    display: none;
+  }
+  .nav nav {
+    overflow: visible;
+    flex: none;
+    font-size: 14px;
+  }
+  .nav {
+    gap: 10px;
+  }
+  .nav > .outline {
+    padding: 9px 12px;
+  }
+  .nav > a:first-child {
+    flex-shrink: 0;
+  }
+  .nav .search {
+    flex-basis: 100%;
+  }
+}
+.search button {
+  display: grid;
+  place-items: center;
+}
+.nav .search svg {
+  width: 22px;
+  height: 22px;
+}
+.nav .search button {
+  padding: 0 4px;
+}

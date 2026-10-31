@@ -1,14 +1,31 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import Header from "../../header";
-import Account from "../../account";
+import SiteHeader from "@/app/components/layout/site-header";
 import PhotoInput from "./photo-input";
 import Icon from "../ui-icon";
 import "./sell.css";
 export default function SellForm() {
-  const [auth,setAuth]=useState<'checking'|'ready'|'required'|'failed'>('checking');
-  useEffect(()=>{let live=true;fetch('/api/auth/me').then(r=>r.json()).then(data=>{if(live)setAuth(data.user?'ready':'required');}).catch(()=>{if(live)setAuth('failed');});return()=>{live=false;};},[]);
+  const router = useRouter();
+  const [auth, setAuth] = useState<
+    "checking" | "ready" | "required" | "failed"
+  >("checking");
+  useEffect(() => {
+    let live = true;
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (live) setAuth(data.user ? "ready" : "required");
+      })
+      .catch(() => {
+        if (live) setAuth("failed");
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
   const dirty = useRef(false);
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
@@ -17,8 +34,33 @@ export default function SellForm() {
         event.returnValue = "";
       }
     };
+    const leave = (event: MouseEvent) => {
+      const link =
+        event.target instanceof Element
+          ? event.target.closest("a[href]")
+          : null;
+      if (
+        !dirty.current ||
+        !link ||
+        event.defaultPrevented ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      )
+        return;
+      if (!window.confirm("작성 중인 내용이 있어요. 이 페이지를 나갈까요?")) {
+        event.preventDefault();
+        event.stopPropagation();
+      } else {
+        dirty.current = false;
+      }
+    };
     window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
+    document.addEventListener("click", leave, true);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      document.removeEventListener("click", leave, true);
+    };
   }, []);
   const [pending, setPending] = useState(false),
     [error, setError] = useState(""),
@@ -43,7 +85,7 @@ export default function SellForm() {
         return;
       }
       dirty.current = false;
-      location.assign(`/items/${result.id}`);
+      router.push(`/items/${result.id}`);
     } catch {
       setError("연결을 확인해주세요. 입력 내용은 그대로 유지했어요.");
     } finally {
@@ -52,19 +94,11 @@ export default function SellForm() {
   }
   return (
     <>
-      <header className="top">
-        <div className="nav">
-          <a href="/" aria-label="당근 홈">
-            <Header />
-          </a>
-          <a href="/#market">중고거래</a>
-          <Account />
-        </div>
-      </header>
+      <SiteHeader />
       <main className="sell-page">
-        <a className="sell-back" href="/#market">
+        <Link className="sell-back" href="/#market">
           ← 중고거래 목록
-        </a>
+        </Link>
         <div className="sell-heading">
           <p className="eyebrow">우리 동네 이웃에게</p>
           <h1>내 물건에 새로운 일상을.</h1>
@@ -79,8 +113,26 @@ export default function SellForm() {
             }}
             onSubmit={submit}
           >
-            {auth!=='ready'&&<div className="sell-auth" role="status">{auth==='checking'?'로그인 상태를 확인하고 있어요.':auth==='required'?<>판매글을 작성하려면 먼저 로그인해주세요. <a href="/login?next=/sell">로그인하기 →</a></>:<>로그인 상태를 확인하지 못했어요. <button type="button" onClick={()=>location.reload()}>다시 확인</button></>}</div>}
-            <fieldset disabled={pending||auth!=='ready'}>
+            {auth !== "ready" && (
+              <div className="sell-auth" role="status">
+                {auth === "checking" ? (
+                  "로그인 상태를 확인하고 있어요."
+                ) : auth === "required" ? (
+                  <>
+                    판매글을 작성하려면 먼저 로그인해주세요.{" "}
+                    <Link href="/login?next=/sell">로그인하기 →</Link>
+                  </>
+                ) : (
+                  <>
+                    로그인 상태를 확인하지 못했어요.{" "}
+                    <button type="button" onClick={() => location.reload()}>
+                      다시 확인
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+            <fieldset disabled={pending || auth !== "ready"}>
               <section className="sell-section">
                 <h2>
                   <span>01</span> 물건을 보여주세요
@@ -168,13 +220,16 @@ export default function SellForm() {
               <div className="sell-error" role="alert">
                 {error}
                 {error.includes("로그인") && (
-                  <a href="/login?next=/sell"> 로그인하기 →</a>
+                  <Link href="/login?next=/sell"> 로그인하기 →</Link>
                 )}
               </div>
             )}
             <div className="sell-actions">
               <p>등록한 글은 동네 이웃들이 볼 수 있어요.</p>
-              <button className="primary" disabled={pending||auth!=='ready'}>
+              <button
+                className="primary"
+                disabled={pending || auth !== "ready"}
+              >
                 {pending ? "사진과 판매글 등록 중…" : "판매글 등록하기"}
               </button>
             </div>
@@ -196,7 +251,7 @@ export default function SellForm() {
                 <p>서로 편한 시간과 장소를 약속해요.</p>
               </li>
             </ul>
-            <a href="/#market">다른 이웃의 물건 둘러보기 →</a>
+            <Link href="/#market">다른 이웃의 물건 둘러보기 →</Link>
           </aside>
         </div>
       </main>

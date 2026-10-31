@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import "./auth.css";
-export type User = { readonly id: number; readonly name: string };
+import type { User } from "@/lib/types";
 export function AuthForm({
   register = false,
   onSuccess,
