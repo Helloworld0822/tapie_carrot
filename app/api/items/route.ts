@@ -1,27 +1,29 @@
-import { DatabaseSync } from 'node:sqlite';
-
-const db = new DatabaseSync('carrot.sqlite');
-db.exec(`CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, title TEXT NOT NULL, price INTEGER NOT NULL, location TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
-if (!(db.prepare('SELECT COUNT(*) as count FROM items').get() as { count: number }).count) {
-  const insert = db.prepare('INSERT INTO items (title, price, location, description) VALUES (?, ?, ?, ?)');
-  insert.run('따뜻한 원목 사이드 테이블', 25000, '서초동', '깨끗하게 사용한 사이드 테이블이에요.');
-  insert.run('편하게 입기 좋은 니트', 12000, '역삼동', '상태 좋아요. 동네에서 거래해요!');
-  insert.run('작은 화분과 함께하는 초록 생활', 8000, '성수동', '잘 자라고 있는 식물입니다.');
-  insert.run('주말에 읽기 좋은 책 나눔', 0, '망원동', '필요하신 분께 나눔해요.');
+import { parseItemRequest } from '@/lib/item-photo';
+import { db, user, failure, sameOrigin, itemInput } from '@/lib/server';
+export async function GET(req: Request) {
+  const params=new URL(req.url).searchParams;
+  const q=params.get('q')?.trim() ?? '';
+  const region=params.get('region')?.trim() ?? '';
+  const price=params.get('price') ?? 'all';
+  const sort=params.get('sort') ?? 'latest';
+  if(q.length>100||region.length>50) return failure('검색 조건을 확인해주세요.');
+  const term='%'+q.replace(/[!%_]/g,'!$&')+'%';
+  const priceClause=price==='free'?'AND price=0':price==='under'?'AND price>0 AND price<=10000':'';
+  const order=sort==='low'?'price ASC,items.id DESC':sort==='high'?'price DESC,items.id DESC':'items.id DESC';
+  return Response.json(db.prepare(`SELECT items.*,users.name AS seller_name FROM items LEFT JOIN users ON users.id=items.seller_id WHERE (title LIKE ? ESCAPE '!' OR location LIKE ? ESCAPE '!' OR description LIKE ? ESCAPE '!') AND (?='' OR location=?) ${priceClause} ORDER BY ${order} LIMIT 100`).all(term,term,term,region,region));
 }
-export async function GET(request: Request) {
-  const q = new URL(request.url).searchParams.get('q')?.trim() ?? '';
-  return Response.json(db.prepare('SELECT * FROM items WHERE title LIKE ? OR location LIKE ? ORDER BY id DESC').all(`%${q}%`, `%${q}%`));
-}
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const title = typeof body.title === 'string' ? body.title.trim() : '';
-    const location = typeof body.location === 'string' ? body.location.trim() : '';
-    const price = Number(body.price);
-    const description = typeof body.description === 'string' ? body.description.trim() : '';
-    if (!title || title.length > 100 || !location || location.length > 50 || !Number.isSafeInteger(price) || price < 0 || description.length > 2000) return Response.json({ error: '입력 내용을 확인해주세요.' }, { status: 400 });
-    db.prepare('INSERT INTO items (title, price, location, description) VALUES (?, ?, ?, ?)').run(title, price, location, description);
-    return Response.json({ ok: true }, { status: 201 });
-  } catch { return Response.json({ error: '등록하지 못했어요.' }, { status: 400 }); }
+export async function POST(req: Request) {
+  if(!sameOrigin(req)) return failure('허용되지 않는 요청입니다.',403);
+  const account=user(req); if(!account) return failure('로그인이 필요해요.',401);
+  let input;
+  try{input=await parseItemRequest(req);}catch{return failure('사진은 5MB 이하의 JPEG, PNG, WebP 파일로 등록해주세요.');}
+  const parsed=itemInput.safeParse(input.data);if(!parsed.success)return failure('입력 내용을 확인해주세요.');
+  const d=parsed.data;
+  db.exec('BEGIN');
+  try{
+   const result=db.prepare('INSERT INTO items(title,price,location,description,seller_id,has_photo) VALUES(?,?,?,?,?,?)').run(d.title,d.price,d.location,d.description,account.id,input.photo?1:0);
+   if(input.photo)db.prepare('INSERT INTO item_photos(item_id,data) VALUES(?,?)').run(result.lastInsertRowid,input.photo);
+   db.exec('COMMIT');
+   return Response.json(db.prepare('SELECT * FROM items WHERE id=?').get(result.lastInsertRowid),{status:201});
+  }catch{db.exec('ROLLBACK');return failure('등록하지 못했어요. 다시 시도해주세요.',500);}
 }
