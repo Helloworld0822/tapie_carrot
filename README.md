@@ -1,61 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tapie Carrot
 
-## Getting Started
+동네 중고거래 웹 앱입니다. 이메일 계정, 상품 검색·등록·사진, 판매자와의 WebSocket 채팅을 제공합니다.
 
-First, run the development server:
+## 실행
+
+Node.js 24 이상이 필요합니다.
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+운영 실행은 `npm run build` 후 `npm start`입니다. 기본 포트는 3000이며 `PORT`로 변경할 수 있습니다. WebSocket을 처리하는 `server.mjs`로 실행해야 합니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 검증
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm test
+```
 
-## Learn More
+`npm test`는 빌드된 앱을 임시 포트와 격리된 SQLite DB로 실행합니다. 인증/상품, 사진 검증, 102개 상품의 검색·필터·정렬, WebSocket 권한·송수신·잘못된 요청을 검사하고 종료 시 테스트 DB를 제거합니다. 기존 서버를 검사하려면 `TEST_BASE_URL=http://localhost:포트 node tests/api.mjs`처럼 개별 파일을 실행하세요.
 
-To learn more about Next.js, take a look at the following resources:
+## 코드 구조
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| 위치                                  | 역할                                     |
+| ------------------------------------- | ---------------------------------------- |
+| `app/components/layout`               | 로고, 공통 헤더                          |
+| `app/components/account`, `auth`      | 계정 메뉴와 인증 화면                    |
+| `app/components/marketplace`, `items` | 필터, 상품 카드, 판매글 입력             |
+| `app/components/chat`                 | 대화 목록과 WebSocket 대화               |
+| `app/styles`                          | 기본 토큰, 탐색, 상품, 채팅 스타일       |
+| `app/api`                             | HTTP API                                 |
+| `lib/database.ts`                     | SQLite 테이블, 마이그레이션, 인덱스      |
+| `lib/server.ts`, `item-photo.ts`      | 인증/검증과 사진 처리                    |
+| `server.mjs`                          | Next.js HTTP 서버와 WebSocket 업그레이드 |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 데이터와 운영
 
-## Deploy on Vercel
+기본 DB는 `carrot.sqlite`이며 `DATABASE_PATH`로 변경할 수 있습니다. 기존 데이터를 보존하며 테이블과 필드를 추가합니다. DB에는 사용자·세션·상품·사진·대화가 포함되므로 영속 디스크에 저장하고 백업하세요.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+비밀번호는 salt를 적용한 scrypt, 세션은 7일 유효한 HttpOnly 쿠키와 DB 토큰 해시로 관리합니다. 운영 환경은 HTTPS가 필요합니다. 채팅은 참여자만 접근할 수 있습니다. 프록시는 `/ws/chat`의 WebSocket 업그레이드를 전달해야 합니다. 현재 실시간 전달은 단일 서버 기준이며 여러 인스턴스에는 공유 pub/sub가 필요합니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+사진은 JPEG/PNG/WebP 1장, 최대 5MB입니다. 실제 이미지를 디코딩해 최대 1800px WebP로 변환하고 DB에 저장합니다. 목록 이미지는 화면 크기에 맞춰 제공합니다. 기존 예시 상품은 판매자가 없어 채팅할 수 없습니다.
 
-## 중고거래 백엔드
+## API
 
-Node.js 24와 SQLite를 사용합니다. 기본 DB는 `carrot.sqlite`이며 `DATABASE_PATH`로 변경할 수 있습니다. 서버 시작 시 기존 상품 데이터를 보존하면서 인증/채팅 테이블과 판매자 필드를 추가합니다.
-
-- `POST /api/auth/register`: `{email,password,name}` (비밀번호 8~128자)
+- `POST /api/auth/register`: `{email,password,name}`
 - `POST /api/auth/login`: `{email,password}`
 - `GET /api/auth/me`, `POST /api/auth/logout`
-- `GET /api/items?q=검색어`: 제목/동네/설명 검색, 최신 100개
-- `GET /api/items/:id`, `POST /api/items`: `{title,price,location,description}` (등록은 로그인 필요)
+- `GET /api/items?q=&region=&price=all|free|under&sort=latest|low|high`: 필터와 정렬 후 최대 100개
+- `GET /api/items/regions`, `GET /api/items/:id`, `GET /api/items/:id/image`
+- `POST /api/items`: `{title,price,location,description}` JSON 또는 `photo`가 포함된 multipart/form-data (로그인 필요)
 - `GET /api/chats`, `POST /api/chats`: `{itemId}`
 - `GET /api/chats/:id/messages?after=0`, `POST /api/chats/:id/messages`: `{text}`
+- `/ws/chat?chatId=번호`: 로그인 쿠키·Origin·참여자 검증 후 이력과 새 메시지 전달
 
-비밀번호는 salt를 적용한 scrypt로 저장하고, 세션은 HttpOnly 쿠키와 DB의 토큰 해시로 관리합니다. 세션 유효기간은 7일이며 로그아웃 시 즉시 폐기합니다. 운영에서는 HTTPS가 필요합니다. 기존 예시 상품은 판매자가 없어 채팅할 수 없습니다. 새로 등록한 상품으로 거래를 시작하세요.
-
-통합 검증: 격리된 `DATABASE_PATH`로 서버를 실행한 후 `TEST_BASE_URL=http://localhost:포트 node tests/api.mjs` 및 `TEST_BASE_URL=http://localhost:포트 node tests/websocket.mjs`.
-
-현재 범위: 이메일/비밀번호 인증, 텍스트 채팅(WebSocket), 상품 등록/조회/검색. 이메일 인증·비밀번호 재설정·로그인 시도 제한·이미지 업로드·판매 상태 변경은 후속 구현 사항입니다. SQLite 파일은 영속 디스크에서 운영하고 백업해야 합니다.
-
-
-채팅 연결은 `/ws/chat?chatId=번호`를 사용합니다. HttpOnly 세션 쿠키, Origin, 대화 참여 여부를 검증합니다. 연결 시 저장된 대화 이력을 보내고, `{text: "메시지"}`를 받으면 DB 저장 후 참여자에게 전송합니다. 화면의 메시지 폴링은 사용하지 않습니다. 채팅 목록은 3초마다 갱신합니다.
-
-실행: `npm run dev`, 운영은 `npm run build` 후 `PORT=3000 npm start`. WebSocket 업그레이드를 처리하는 커스텀 Node 서버가 필요하며, 프록시는 `/ws/chat` 업그레이드를 전달해야 합니다. 현재 연결 배포는 단일 서버 기준이며 다중 인스턴스에는 공유 pub/sub가 필요합니다.
-
-상품 사진: 판매글 폼에서 JPEG/PNG/WebP 1장(최대 5MB)을 선택할 수 있습니다. multipart/form-data의 `photo` 필드를 사용하며 사진 없는 기존 JSON 등록도 지원합니다. 서버가 디코딩·회전·최대 1800px 축소·WebP 변환 후 SQLite `item_photos`에 저장합니다. 사진은 `GET /api/items/:id/image`로 조회합니다. SQLite 백업에 사진이 포함됩니다. 검증: `TEST_BASE_URL=http://localhost:포트 node tests/photos.mjs`.
+현재 이메일 인증·비밀번호 재설정·로그인 시도 제한·프로필 사진 업로드·판매 상태 변경은 제공하지 않습니다.
